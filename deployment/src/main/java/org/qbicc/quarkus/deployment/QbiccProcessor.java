@@ -100,7 +100,7 @@ class QbiccProcessor {
     }
 
     @BuildStep
-    QbiccFeatureBuildItem generateFeature(List<RuntimeInitializedClassBuildItem> runtimeInitializedClassBuildItems,
+    void generateFeature(List<RuntimeInitializedClassBuildItem> runtimeInitializedClassBuildItems,
                          List<RuntimeReinitializedClassBuildItem> runtimeReinitializedClassBuildItems,
                          List<NativeImageProxyDefinitionBuildItem> proxies,
                          List<NativeImageResourceBuildItem> resourceItems,
@@ -110,7 +110,8 @@ class QbiccProcessor {
                          List<ReflectiveMethodBuildItem> reflectiveMethods,
                          List<ReflectiveFieldBuildItem> reflectiveFields,
                          List<ReflectiveClassBuildItem> reflectiveClassBuildItems,
-                         List<ServiceProviderBuildItem> serviceProviderBuildItems) {
+                         List<ServiceProviderBuildItem> serviceProviderBuildItems,
+                         BuildProducer<QbiccFeatureBuildItem> qbiccFeatureBuildItemBuildProducer) {
 
         QbiccFeature qf = new QbiccFeature();
 
@@ -190,13 +191,13 @@ class QbiccProcessor {
         qf.reflectiveClasses = qfReflectiveClasses.toArray(QbiccFeature.ReflectiveClass[]::new);
         qf.runtimeResources = qfRuntimeResources.toArray(String[]::new);
 
-        return new QbiccFeatureBuildItem(qf);
+        qbiccFeatureBuildItemBuildProducer.produce(new QbiccFeatureBuildItem(qf));
     }
 
     @BuildStep
     QbiccResultBuildItem build(
         QbiccConfiguration configuration,
-        QbiccFeatureBuildItem dynamicQbiccFeature,
+        List<QbiccFeatureBuildItem> dynamicQbiccFeatures,
         MainClassBuildItem mainClassBuildItem,
         NativeImageSourceJarBuildItem nativeImageJar,
         List<NativeImageSystemPropertyBuildItem> nativeImageProperties,
@@ -217,7 +218,9 @@ class QbiccProcessor {
         final Platform platform = configuration.platform().orElse(Platform.HOST_PLATFORM);
         URL defaultFeature = QbiccProcessor.class.getResource("/qbicc-feature.yaml");
         mainBuilder.addQbiccYamlFeatures(List.of(defaultFeature));
-        mainBuilder.addQbiccFeature((QbiccFeature)dynamicQbiccFeature.getFeature());
+        for (QbiccFeatureBuildItem dqf: dynamicQbiccFeatures) {
+            mainBuilder.addQbiccFeature((QbiccFeature) dqf.getFeature());
+        }
         mainBuilder.setPlatform(platform);
         mainBuilder.setIsPie(pie);
         mainBuilder.setLlvmConfigurationBuilder(LLVMConfiguration.builder()
