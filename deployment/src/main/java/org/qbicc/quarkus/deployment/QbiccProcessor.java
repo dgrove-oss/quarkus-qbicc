@@ -5,8 +5,6 @@ import java.net.URL;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,13 +19,7 @@ import io.quarkus.bootstrap.resolver.maven.MavenArtifactResolver;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.GeneratedNativeImageClassBuildItem;
 import io.quarkus.deployment.builditem.MainClassBuildItem;
-import io.quarkus.deployment.builditem.NativeImageFeatureBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ForceNonWeakReflectiveClassBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.JPMSExportBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.LambdaCapturingTypeBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBundleBuildItem;
@@ -39,18 +31,14 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveFieldBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveMethodBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedPackageBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeReinitializedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.UnsafeAccessedFieldBuildItem;
 import io.quarkus.deployment.pkg.PackageConfig;
 import io.quarkus.deployment.pkg.builditem.ArtifactResultBuildItem;
 import io.quarkus.deployment.pkg.builditem.NativeImageSourceJarBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
-import io.quarkus.runtime.util.ClassPathUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.maven.settings.Settings;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.RepositorySystemSession;
 import org.qbicc.context.DiagnosticContext;
 import org.qbicc.driver.ClassPathItem;
@@ -144,9 +132,7 @@ class QbiccProcessor {
         }
 
         for (NativeImageResourceBuildItem ri : resourceItems) {
-            for (String r : ri.getResources()) {
-                qfRuntimeResources.add(r);
-            }
+            qfRuntimeResources.addAll(ri.getResources());
         }
 
         for (NativeImageResourceBundleBuildItem rb: resourceBundles) {
